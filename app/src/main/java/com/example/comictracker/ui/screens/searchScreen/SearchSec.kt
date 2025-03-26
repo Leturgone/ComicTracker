@@ -1,5 +1,6 @@
 package com.example.comictracker.ui.screens.searchScreen
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -32,7 +34,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 fun getSharedPreferences(context: Context) = context.getSharedPreferences("search_history", Context.MODE_PRIVATE)
@@ -52,6 +56,7 @@ fun clearSearchHistory(context: Context) {
     preferences.edit().remove("search_history").apply()
 }
 
+@SuppressLint("SuspiciousIndentation")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchSec(navController: NavHostController){
@@ -59,6 +64,26 @@ fun SearchSec(navController: NavHostController){
     var textFieldState = rememberTextFieldState()
     var searchHistory by rememberSaveable { mutableStateOf<MutableList<String>>(mutableListOf()) }
     var expanded by rememberSaveable { mutableStateOf(false)}
+    var debounceJob by remember { mutableStateOf<Job?>(null)}
+
+        LaunchedEffect(Unit) {
+        searchHistory = getSearchHistory(context).toMutableStateList()
+    }
+
+    // Debounce logic
+    LaunchedEffect(textFieldState.text) {
+        debounceJob?.cancel()
+        debounceJob = launch {
+            delay(2000)
+            if (textFieldState.text.isNotEmpty()) {
+                searchHistory = (listOf(textFieldState.text)+ searchHistory).distinct().take(10).map {it.toString() }.toMutableList()
+                saveSearchHistory(context, searchHistory)
+                navController.navigate("search_result/${textFieldState.text}")
+            }
+        }
+    }
+
+
 
     searchHistory = remember { getSearchHistory(context) }.toMutableList()
 
