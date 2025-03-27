@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -97,7 +98,7 @@ fun SearchSec(navController: NavHostController){
         searchHistory = getSearchHistory(context).toMutableStateList()
     }
 
-    // Debounce logic
+
     LaunchedEffect(textFieldState.text) {
         debounceJob?.cancel()
         debounceJob = launch {
@@ -115,7 +116,7 @@ fun SearchSec(navController: NavHostController){
     searchHistory = remember { getSearchHistory(context) }.toMutableList()
 
     MaterialTheme(
-        colorScheme = if (isDarkThemeState) darkColorScheme() else lightColorScheme()
+        colorScheme = if (isDarkThemeState) darkColorScheme() else lightColorScheme(onBackground = Color.White)
     ) {Column(modifier = Modifier.padding(16.dp)) {
         DarkThemeToggle(isDarkTheme = isDarkThemeState, onThemeToggle = {isDarkThemeState = it})
         Text(text = "Search comics",
